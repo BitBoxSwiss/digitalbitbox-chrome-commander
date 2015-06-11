@@ -4,12 +4,12 @@ A Chrome Extension generic API interface.
 (early alpha)
 
 To use:
-Clone the repository
-Browse to chrome://extensions
-Select the `Developer mode` checkbox
-Select `Load unpacked extension...`
-Choose the `digitalbitbox-chrome-commander` folder
-Find the new extension in the browser tab, and `Launch`
+- Clone the repository
+- Browse to chrome://extensions
+- Select the `Developer mode` checkbox
+- Select `Load unpacked extension...`
+- Choose the `digitalbitbox-chrome-commander` folder
+- Find the new extension in the browser tab, and `Launch`
 
 
 Currently only works with a device password set to `0000`
