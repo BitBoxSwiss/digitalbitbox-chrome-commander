@@ -1,0 +1,19 @@
+{
+	"name": "Digital Bitbox Command Window",
+	"manifest_version": 2,
+	"version": "0.1",
+  "minimum_chrome_version": "36.0.1941.0",
+	"app": {
+		"background": {
+			"scripts": [ "main.js" ]
+		}
+	},
+	"permissions": [
+		"hid",
+		{
+			"usbDevices": [
+				{ "vendorId": 1003, "productId": 9218 }
+ 			]
+		}
+	]
+}

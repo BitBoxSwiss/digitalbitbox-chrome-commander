@@ -1,0 +1,36 @@
+
+@font-face {
+    font-family: "Digibox";
+    src: url("../fonts/Digibox/Digibox.woff") format("woff"), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         url("../fonts/Digibox/Digibox.ttf") format("truetype"); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+}
+
+db {    
+    margin: 0 0 25px;
+    font-size: 30px;
+    line-height: 1.5;
+    font-family: "Digibox";
+}
+@media(min-width:767px) {
+    db {    
+        margin: 0 0 25px;
+        font-size: 40px;
+        line-height: 1.5;
+        font-family: "Digibox";
+        padding:30px;
+    }
+}
+
+p2 {
+    margin: 0 0 25px;
+    font-size: 20px;
+    line-height: 1.5;
+}
+@media(min-width:767px) {
+    p2 {
+        margin: 0 0 35px;
+        font-size: 25px;
+        line-height: 1.6;
+    }
+}
+

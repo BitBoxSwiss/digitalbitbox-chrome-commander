@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <script src="control-panel.js"></script>
+    <link href="css/digiboxfont.css" rel="stylesheet">
+    <!-- Bootstrap Core CSS -->
+  </head>
+  <body>
+      
+      <db># digital BITBOX</db><br>
+      <div id="PANEL">
+
+      <!-- The dialog element can be enabled in Chrome 31 and higher using a setting in chrome://flags.
+           Look for the "Enable experimental Web Platform features" flag and make sure it is enabled -->
+      <dialog id="dialogOne">
+          <div>
+          <form id="dialogForm">  
+            <p id="dialog-text"></p>
+            <input id="dialog-value" value="" size="16">
+            <textarea id="dialog-textarea" cols="32" rows="10"></textarea><br>
+            <button id="dialog-cancel">Cancel</button>
+            <button id="dialog-accept" type="submit">OK</button>
+            <span id="dialogButtonsBackup">
+                <br><input type="radio" name="backup" id="dialog-backupunencrypt" value="unenc" checked>
+                Save unencrypted Backup
+                <br><input type="radio" name="backup" id="dialog-backupencrypt" value="enc">
+                Save encrypted backup
+            </span>
+            <span id="dialogButtonsSeed">
+                <br><input type="checkbox" id="dialog-seeddecrypt">Decrypt the micro SD file?
+            </span>
+            <span id="dialogButtonsAes">
+                <br><input type="radio" name="aes" id="dialog-aesencrypt" value="encrypt" checked>Encrypt
+                <input type="radio" name="aes" id="dialog-aesdecrypt" value="decrypt">Decrypt
+                <br><input type="radio" name="aes" id="dialog-aeskey"     value="update">Update key
+            </span>
+          </form>
+          </div>
+      </dialog>
+  
+
+      <label>Command line:</label><br>
+      <input id="out-data" value="" size="32"><br>
+      <button id="send">Send</button><br>
+      
+      <div id="COL">       
+          <p>Device</p>
+          <button id="device-name">Name</button><br>
+          <button id="set-password">Set password</button><br>
+          <button id="toggle-led">Toggle LED</button><br>
+          <button id="device-serial">Serial #</button><br>
+          <button id="device-version">Version</button><br>
+          <button id="get-xpub">Xpub</button><br>
+          <button id="device-erase">Erase</button><br>
+          <button id="device-lock">Lock</button><br>
+      </div>
+      <div id="COL">       
+          <p>SD card</p>
+          <button id="sd-list">List files</button><br>
+          <button id="sd-erase">Erase files</button><br>
+          <button id="sd-backup">Backup wallet</button><br>
+          <br>
+          <p>2FA password</p>
+          <button id="tfa-create">Create</button><br>
+          <button id="tfa-export">Export</button><br>
+      </div>
+      <div id="COL">       
+          <p>Wallet</p>
+          <button id="wallet-sign" disabled>Sign</button><br>
+          <button id="wallet-seed">Seed</button><br>
+          <br>
+          <p>Crypto</p>
+          <button id="aes-crypto">AES encryption</button><br>
+          <button id="get-random">Random #</button><br>
+      </div>
+    
+    </div>
+    
+    <div id="PANEL">
+      <label>Response:</label><br>
+      <textarea id="input-log" cols="65" rows="20" readonly></textarea><br>
+      <input type="checkbox" id="in-poll" checked>
+      <label>polling&nbsp;&nbsp;</label>
+      <button id="receive">Read Report (cancels polling)</button>
+      <button id="clear">Clear Log</button>
+    </div>
+  
+  </body>
+</html>
