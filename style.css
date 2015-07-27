@@ -34,15 +34,11 @@ button {
     font-size:10px;
     margin:3px 3px;
     background-color:#FFFFFF;
-    border-color:#FFFFFF;
+    border-color:#DDDDDD;
     border-style:solid;
     border-width:2px;
     border-radius:8px;
     appearance:none;
-}
-
-button:focus {
-    outline: none
 }
 
 button:hover {
@@ -56,6 +52,17 @@ button:active {
 button:disabled {
     background-color:#E4E4E4;
     border-color:#E4E4E4;
+}
+
+textarea {
+    border-color:#DDDDDD;
+}
+
+textarea:focus,
+input:focus,
+button:focus {
+    outline: none;
+    border-color:#AAAAAA;
 }
 
 dialog {
