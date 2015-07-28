@@ -8,7 +8,10 @@
   </head>
   <body>
       
-      <db># digital BITBOX</db><br>
+      <db># digital BITBOX</db><br>    
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <button id="enter-password">Enter device password</button><br>
+
       <div id="PANEL">
 
       <!-- The dialog element can be enabled in Chrome 31 and higher using a setting in chrome://flags.
@@ -40,18 +43,13 @@
       </dialog>
   
 
-      <label>Command line:</label><br>
-      <input id="out-data" value="" size="32"><br>
-      <button id="send">Send</button><br>
-      
       <div id="COL">       
           <p>Device</p>
           <button id="device-name">Name</button><br>
-          <button id="set-password">Set password</button><br>
+          <button id="reset-password">Set password</button><br>
           <button id="toggle-led">Toggle LED</button><br>
           <button id="device-serial">Serial #</button><br>
           <button id="device-version">Version</button><br>
-          <button id="get-xpub">Xpub</button><br>
           <button id="device-erase">Erase</button><br>
           <button id="device-lock">Lock</button><br>
       </div>
@@ -69,11 +67,17 @@
           <p>Wallet</p>
           <button id="wallet-sign" disabled>Sign</button><br>
           <button id="wallet-seed">Seed</button><br>
+          <button id="get-xpub">Xpub</button><br>
           <br>
           <p>Crypto</p>
           <button id="aes-crypto">AES encryption</button><br>
           <button id="get-random">Random #</button><br>
+          <br>
       </div>
+      <br>
+      <input id="out-data" value="" size="28">
+      <button id="send">Custom command</button>
+      
     
     </div>
     
