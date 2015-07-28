@@ -147,7 +147,7 @@
       
       if (command === "password") {
           newKey = val; 
-          makeCommand(command, val); 
+          makeCommand(command, '"' + val + '"'); 
       }
       else if (command === "enterpassword") {
           if (val) {
