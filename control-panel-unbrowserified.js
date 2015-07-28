@@ -425,13 +425,13 @@
         enableIOControls(false);
     }
       
-    setTimeout(enumerateDevices, 500);
+    setTimeout(enumerateDevices, 100);
   };
 
 
   var isReceivePending = false;
   var pollForInput = function() {
-    if (!isReceivePending) {
+    if (!isReceivePending && deviceConnected) {
       chrome.hid.receive(connection, function(reportId, data) {
         isReceivePending = true;
         logInput(new Uint8Array(data));
