@@ -6,10 +6,6 @@
   //var Script = Bitcore.Script;
 
 
-
-  var pw = '0000';
-  var key = '34d86e688aa433788e29ee3cf8bba62709b8591a63763be4f5e25e9a7def96b7';
-
   var connection = -1;
   var deviceMap = {};
   var pendingDeviceMap = {};
@@ -18,9 +14,7 @@
   var command = ''; 
   var deviceConnected = false;  
   var dialog;
-  var command;
  
-
   
   
   var ui = {
@@ -36,7 +30,8 @@
     deviceVersion: null,
     toggleLed: null,
     getRandom: null,
-    setPassword: null,
+    enterPassword: null,
+    resetPassword: null,
     getXpub: null,
     deviceErase: null,
     deviceLock: null,
@@ -77,12 +72,14 @@
     }
     enableIOControls(false);
     
+    ui.send.addEventListener('click', onSendClicked);
     ui.deviceName.addEventListener('click', onDeviceNameClicked);
     ui.deviceSerial.addEventListener('click', onDeviceSerialClicked);
     ui.deviceVersion.addEventListener('click', onDeviceVersionClicked);
     ui.toggleLed.addEventListener('click', onToggleLedClicked);
     ui.getRandom.addEventListener('click', onGetRandomClicked);
-    ui.setPassword.addEventListener('click', onSetPasswordClicked);
+    ui.enterPassword.addEventListener('click', onEnterPasswordClicked);
+    ui.resetPassword.addEventListener('click', onResetPasswordClicked);
     ui.getXpub.addEventListener('click', onGetXpubClicked);
     ui.deviceErase.addEventListener('click', onDeviceEraseClicked);
     ui.deviceLock.addEventListener('click', onDeviceLockClicked);
@@ -134,22 +131,34 @@
             return false;
         }
     };
-    //});
     
     document.getElementById("dialogForm").onsubmit = function() {
         console.log('form submit');
         return false;
     };
-    
-    
     //document.querySelector('#dialogForm').addEventListener('submit', function (evt) {return false;});
   };
 
+
+
   var dialogClosed = function() {
-	  var val = ui.dialogValue.value + ui.dialogTextarea.value;
-      //console.log(command);
-      //console.log(command === "backup");
-      if (command === "backup") {
+      //console.log('dialog closed');
+      var val = ui.dialogValue.value + ui.dialogTextarea.value;
+      
+      if (command === "password") {
+          newKey = val; 
+          makeCommand(command, val); 
+      }
+      else if (command === "enterpassword") {
+          if (val) {
+              key = doubleHash(val);
+              devicePasswordSet = true;
+          } else {
+              key = "";
+              devicePasswordSet = false;
+          }
+      }
+      else if (command === "backup") {
           //console.log(command);
           //console.log(ui.dialogBackupunencrypt.checked);
           //console.log(ui.dialogBackupencrypt.checked);
@@ -160,6 +169,9 @@
               val = '{"filename":"' + val + '", "encrypt":"yes"}';
               makeCommand(command, val); 
           }
+      }
+      else if (command === "reset") {
+          makeCommand("reset",'"__ERASE__"'); 
       }
       else if (command === "seed") {
           if (ui.dialogSeeddecrypt.checked) {
@@ -186,10 +198,15 @@
               makeCommand(command, val); 
           }
       }
+      else if (command === "sign") {
+          val = '{"data":"' + byte2hex(doubleHash(val)) + '", "type":"hash", "keypath":"m/"}';
+          makeCommand(command, val); // returns 'echo' for user verification
+          setTimeout(function() { makeCommand(command, val); }, 1000); // processes sign command
+          // (without the js junk, somehow second usb hid reply gets dropped)
+      }
       else {
           makeCommand(undefined, '"' + val + '"'); 
       }
-      command = "";
   };
 
   var dialogSimple = function(text) {
@@ -214,6 +231,20 @@
       ui.dialogText.textContent = "Enter a file name";
       dialog.showModal();
   };
+      
+  var dialogErase = function() {
+	  document.querySelector('#dialogButtonsBackup').style.display = "none";
+	  document.querySelector('#dialogButtonsSeed').style.display = "none";
+	  document.querySelector('#dialogButtonsAes').style.display = "none";
+	  ui.dialogTextarea.style.display = "none";
+	  ui.dialogValue.style.display = "none";
+	  //ui.dialogValue.focus();
+      command = "reset";
+      ui.dialogText.textContent = "To reset, select 'OK' then press the Digital Bitbox touch button 3 times.";
+      dialog.showModal();
+  };
+      
+
   
   var dialogSeed = function() {
 	  document.querySelector('#dialogButtonsBackup').style.display = "none";
@@ -248,7 +279,7 @@
 	  ui.dialogTextarea.style.display = "none";
 	  ui.dialogTextarea.focus();
       command = "sign";
-      ui.dialogText.textContent = "Sign";
+      ui.dialogText.textContent = "Enter data to sign. Then press the Digital Bitbox touch button for 3 seconds to accept. Press briefly to reject.";
       dialog.showModal();
   };
 
@@ -263,16 +294,13 @@
 
 
   var enableIOControls = function(ioEnabled) {
-    //ui.deviceSelector.disabled = ioEnabled;
-    //ui.connect.style.display = ioEnabled ? 'none' : 'inline';
-    //ui.disconnect.style.display = ioEnabled ? 'inline' : 'none';
-    ui.inPoll.disabled = !ioEnabled;
-    ui.send.disabled = !ioEnabled;
-    ui.receive.disabled = !ioEnabled;
+    for (var k in ui) {
+      var id = k.replace(/([A-Z])/, '-$1').toLowerCase();
+      var element = document.getElementById(id);
+      element.disabled = !ioEnabled;
+    }
     deviceConnected = ioEnabled;
   };
-
-
 
 
 
@@ -282,7 +310,6 @@
   var onToggleLedClicked = function() { makeCommand("led",'"toggle"'); };
   var onGetRandomClicked = function() { makeCommand("random",'"pseudo"'); };
   var onDeviceLockClicked = function() { makeCommand("device",'"lock"'); };
-  var onDeviceEraseClicked = function() { makeCommand("reset",'"__ERASE__"'); };
   var onSdListClicked = function() { makeCommand("backup",'"list"'); };
   var onSdEraseClicked = function() { makeCommand("backup",'"erase"'); };
   var onTfaCreateClicked = function() { makeCommand("verifypass",'"create"'); };
@@ -294,13 +321,19 @@
   var onAesCryptoClicked = function() { dialogAes(); };
   var onWalletSignClicked = function() { dialogSign(); };
   var onWalletSeedClicked = function() { dialogSeed(); };
-      
+  var onDeviceEraseClicked = function() { dialogErase(); };
+  
   var onDeviceNameClicked = function() {
       command = "name";
       dialogSimple("Enter a new name, or leave empty to read the current name");
   };
 
-  var onSetPasswordClicked = function() {
+  var onEnterPasswordClicked = function() {
+      command = "enterpassword";
+      dialogSimple("Enter the password");
+  };
+
+  var onResetPasswordClicked = function() {
       command = "password";
       dialogSimple("Enter a password");
   };
@@ -319,20 +352,18 @@
     var bytes = new Uint8Array(reportBufferSize);
     //var contents = ui.outData.value;
     
-    //console.log(contents);
-    if (contents.search('"password":') < 0 ) {
+    if (contents.search('"reset":') < 0 && devicePasswordSet) {
         contents = aes_cbc_b64_encrypt(contents);
     }
-    //console.log(contents);
+    
     contents = contents.replace(/\\x([a-fA-F0-9]{2})/g, function(match, capture) {
       return String.fromCharCode(parseInt(capture, 16));
     });
-    //console.log(contents);
     
     
     for (var i = 0; i < contents.length && i < bytes.length; ++i) {
       if (contents.charCodeAt(i) > 255) {
-        throw "I am not smart enough to decode non-ASCII data.";
+        throw "Cannot decode non-ASCII data.";
       }
       bytes[i] = contents.charCodeAt(i);
     }
@@ -341,11 +372,11 @@
       //bytes[i] = pad;
       bytes[i] = 0;
     }
-    ui.send.disabled = true;
+    //ui.send.disabled = true;
   
     //chrome.hid.send(connection, id, bytes.buffer, function() {
     chrome.hid.send(connection, 0, bytes.buffer, function() {
-      ui.send.disabled = false;
+      //ui.send.disabled = false;
     });
   };
 
@@ -358,7 +389,6 @@
 
   //var pendingDeviceEnumerations;
   var enumerateDevices = function() {
-    //console.log('enumerate');
     var deviceIds = [];
     var permissions = chrome.runtime.getManifest().permissions;
     for (var i = 0; i < permissions.length; ++i) {
@@ -378,17 +408,16 @@
   var onDevicesEnumerated = function(devices) {
     // Connect
     if (devices.length && !deviceConnected) {
-        //console.log('connect');
         deviceId = devices[0].deviceId;
         chrome.hid.connect(deviceId, function(connectInfo) {
         if (!connectInfo) {
             console.warn("Unable to connect to device.");
         }
-        //console.log(connectInfo.connectionId);
         connection = connectInfo.connectionId;
         enableIOControls(true);
         isReceivePending = false;
         enablePolling(ui.inPoll.checked);
+        //makeCommand("name", '""'); // will initialize devicesPasswordSet variable
         });
     } else if (!devices.length && deviceConnected){
         //chrome.hid.disconnect(deviceId, function() {});
@@ -396,21 +425,21 @@
         enableIOControls(false);
     }
       
-    setTimeout(enumerateDevices, 1000);
+    setTimeout(enumerateDevices, 500);
   };
 
 
   var isReceivePending = false;
   var pollForInput = function() {
-    //var size = +ui.inSize.value;
-    isReceivePending = true;
-    chrome.hid.receive(connection, function(reportId, data) {
-      isReceivePending = false;
-      logInput(new Uint8Array(data));
-      if (ui.inPoll.checked) {
-        setTimeout(pollForInput, 0);
-      }
-    });
+    if (!isReceivePending) {
+      chrome.hid.receive(connection, function(reportId, data) {
+        isReceivePending = true;
+        logInput(new Uint8Array(data));
+        if (ui.inPoll.checked) {
+          setTimeout(pollForInput, 0);
+        }
+      });
+    }
   };
 
   var enablePolling = function(pollEnabled) {
@@ -426,9 +455,7 @@
 
   var onReceiveClicked = function() {
     enablePolling(false);
-    if (!isReceivePending) {
-      pollForInput();
-    }
+    pollForInput();
   };
 
   var byteToHex = function(value) {
@@ -438,6 +465,7 @@
   };
 
   var logInput = function(bytes) {
+    //console.log(bytes.length);
     var log = '';
     for (var i = 0; i < bytes.length; i += 16) {
       var sliceLength = Math.min(bytes.length - i, 16);
@@ -446,17 +474,15 @@
         var ch = String.fromCharCode(lineBytes[j]);
         if (lineBytes[j] < 32 || lineBytes[j] > 126) {
            continue;  
-           //ch = '.';
         }
         log += ch;
       }
     }
-    //console.log(log);
     log = hidParseReport(log);
-    //console.log(log);
     log += "\n";
     ui.inputLog.textContent += log;
     ui.inputLog.scrollTop = ui.inputLog.scrollHeight;
+    isReceivePending = false;
   };
 
   var onClearClicked = function() {
@@ -466,29 +492,46 @@
 
 
 
-
-
-
-
-
+  var devicePasswordSet = false;
   var hidParseReport = function(report) 
   {
     var r;
-    //console.log(report);
+    var oldKey = key;
+    
+    if (newKey) {
+        // update key
+        //console.log(newKey);
+        key = doubleHash(newKey);
+        newKey = undefined;
+    }
+    
     try {
         r = JSON.parse(report);
-        //console.log(r);
-        if (r.ciphertext) 
-            r = aes_cbc_b64_decrypt(r.ciphertext);
+        if (r.ciphertext)
+            try {
+                r = aes_cbc_b64_decrypt(r.ciphertext);
+            }
+            catch(err) {
+                key = oldKey;
+                r = aes_cbc_b64_decrypt(r.ciphertext);
+            }
         else
             r = JSON.stringify(r, undefined, 4);
     }
     catch(err) {
+        console.log('parse err');
         r = report;
     }
+    
+    if (r.search('"reset":') >= 0 && r.search('"success"') >= 0)
+        devicePasswordSet = false;
+    else if (r.search('"input":') >= 0 && r.search('Please set a password') >= 0)
+        devicePasswordSet = false;
+    else
+        devicePasswordSet = true;
+    
     return r;
   };
-
 
 
   var prettyprint = function(res)
@@ -507,7 +550,27 @@
     return pprnt;
   };
 
+  
+  var doubleHash = function(data) {
+      data = Crypto.createHash('sha256').update(data).digest();
+      data = Crypto.createHash('sha256').update(data).digest();
+      return data; 
+  }
 
+
+  var byte2hex = function(arr) {
+      var ret = new Buffer(arr).toString('hex');
+      return ret;
+  }
+  
+  //var pw = '0000';
+  //var key = '34d86e688aa433788e29ee3cf8bba62709b8591a63763be4f5e25e9a7def96b7';
+  //var key = doubleHash('0000'); // default testing key
+  var newKey = undefined;  
+  var key = "";
+  
+  
+  
   var aes_cbc_b64_decrypt = function(ciphertext)
   {
     var res;
@@ -523,7 +586,7 @@
     catch(err) {
         console.log(err);
         res = ciphertext;
-        //return err.message;
+        throw err;
     }
     
     return res;
@@ -541,9 +604,10 @@
     }
     catch(err) {
         console.log(err);
-        //return err.message;
+        throw err;
     }
   };
+
 
   window.addEventListener('load', initializeWindow);
 }());
